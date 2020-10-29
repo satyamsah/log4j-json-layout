@@ -8,6 +8,8 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -28,6 +30,14 @@ public class JsonLayout extends Layout {
     public void activateOptions() {
     }
 
+    public String getSparklineIdfromMdc(LoggingEvent loggingEvent ){
+        Map<?, ?> entries = loggingEvent.getProperties();
+        if (entries.isEmpty()) {
+            return null;
+        }else{
+            return entries.get("sparklineOcid").toString();
+        }
+    }
     public boolean ignoresThrowable() {
         return false;
     }
@@ -35,24 +45,21 @@ public class JsonLayout extends Layout {
     @Override
     public String format(LoggingEvent loggingEvent) {
         Date timestamp = new Date(loggingEvent.getTimeStamp());
-
         String stacktrace = null;
-
         if (loggingEvent.getThrowableStrRep() != null) {
             stacktrace = String.join("\n", loggingEvent.getThrowableStrRep());
         }
-
         LogItem li = new LogItem(
-            this.dateFormat.format(timestamp),
+            //this.dateFormat.format(timestamp),
+                this.getSparklineIdfromMdc(loggingEvent),
+                timestamp.getTime(),
             loggingEvent.getLevel().toString(),
             loggingEvent.getLoggerName(),
             loggingEvent.getThreadName(),
             loggingEvent.getMessage().toString(),
             stacktrace
         );
-
         String out;
-
         try {
             out = om.writeValueAsString(li);
         } catch (JsonProcessingException e) {
